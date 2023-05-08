@@ -38,6 +38,6 @@ def label_to_nl(label_file, nl_file, range_min, range_max):
     print("debug symbols: " + nl_file)
     
 if __name__ == "__main__":
-    label_to_nl("bin/psychedelia.labels.txt", "bin/psychedelia.nes.ram.nl", 0x0000, 0x7FF)
-    label_to_nl("bin/psychedelia.labels.txt", "bin/psychedelia.nes.0.nl", 0x8000, 0xBFFF)
-    label_to_nl("bin/psychedelia.labels.txt", "bin/psychedelia.nes.1.nl", 0xC000, 0xFFFF)
+    label_to_nl("bin/gridrunner.labels.txt", "bin/gridrunner.nes.ram.nl", 0x0000, 0x7FF)
+    label_to_nl("bin/gridrunner.labels.txt", "bin/gridrunner.nes.0.nl", 0x8000, 0xBFFF)
+    label_to_nl("bin/gridrunner.labels.txt", "bin/gridrunner.nes.1.nl", 0xC000, 0xFFFF)

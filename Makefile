@@ -1,16 +1,16 @@
 .PHONY: all clean run
 
-NES_IMAGE = "bin/psychedelia.nes"
+NES_IMAGE = "bin/gridrunner.nes"
 FCEUX = fceux
 
 all: clean run
 
-psychedelia.nes:
-	ca65 -g src/psychedelia.asm -l bin/psychedelia.lst -o bin/psychedelia.o
-	ld65 -o $(NES_IMAGE) -C psychedelia.cfg -m bin/psychedelia.map.txt bin/psychedelia.o -Ln bin/psychedelia.labels.txt --dbgfile bin/psychedelia.nes.test.dbg
+gridrunner.nes:
+	ca65 -g src/gridrunner.asm -l bin/gridrunner.lst -o bin/gridrunner.o
+	ld65 -o $(NES_IMAGE) -C gridrunner.cfg -m bin/gridrunner.map.txt bin/gridrunner.o -Ln bin/gridrunner.labels.txt --dbgfile bin/gridrunner.nes.test.dbg
 	python3 fceux_symbols.py
 
-run: psychedelia.nes
+run: gridrunner.nes
 	$(FCEUX) $(NES_IMAGE)
 
 clean:
