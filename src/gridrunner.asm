@@ -70,8 +70,8 @@ soundEffectControl            .res 1
 lastKeyPressed                .res 1
 gridXPos .res 1
 gridYPos .res 1
-podLoPtr .res 1
-podHiPtr .res 1
+bombLoPtr .res 1
+bombHiPtr .res 1
 
 podScreenLoPtr .res 1
 podScreenHiPtr .res 1
@@ -83,6 +83,8 @@ previousFrameButtons             .res 1
 buttons                          .res 1
 pressedButtons                   .res 1
 releasedButtons                  .res 1
+
+temp .res 1
 
 .segment "RAM"
 screenLinesLoPtrArray
@@ -112,8 +114,8 @@ screenBufferHiPtrArray
         .BYTE $00,$00,$00,$00,$00,$00,$00,$00
         .BYTE $00,$00,$00,$00,$00,$00
 
-podLoPtrArray                 .res 32 
-podHiPtrArray                 .res 32
+bombLoPtrArray                 .res 32 
+bombHiPtrArray                 .res 32
 droidXPositionArray           .res $100 
 droidYPositionArray           .res $100 
 droidStatusArray              .res $100 
@@ -502,7 +504,7 @@ StartLevel
         STA SCREEN_RAM + 31
         LDX #$07
         LDA #$30
-b80EE   STA SCREEN_RAM + $000E,X
+b80EE   STA SCREEN_RAM + $0007,X
         DEX 
         BNE b80EE
         JMP DisplayNewLevelInterstitial
@@ -628,14 +630,21 @@ AddPixelToNMTUpdate
 
         STX NMT_UPDATE_LEN
 
-        ; If we've got a few to write, let them do that now.
-        CPX #BATCH_SIZE
-        BMI @UpdateComplete
-        ;JSR SetPaletteForPixelPosition
-        JSR PPU_Update
 
-@UpdateComplete
         RTS
+
+;-------------------------------------------------------------------------
+; GetLinePtrForCurrentYPosition
+;-------------------------------------------------------------------------
+GetScreenBufferForCurrentPosition
+        LDX currentYPosition
+        LDY currentXPosition
+
+        LDA screenBufferLoPtrArray,X
+        STA screenBufferLoPtr
+        LDA screenBufferHiPtrArray,X
+        STA screenBufferHiPtr
+        RTS 
 
 ;-------------------------------------------------------------------------
 ; GetLinePtrForCurrentYPosition
@@ -656,32 +665,53 @@ GetLinePtrForCurrentYPosition
         RTS 
 
 ;-------------------------------------------------------------------------
+; WriteCurrentCharacterToCurrentXYPosToNMTOnly
+;-------------------------------------------------------------------------
+WriteCurrentCharacterToCurrentXYPosToNMTOnly
+        JSR GetLinePtrForCurrentYPosition
+        JSR AddPixelToNMTUpdate
+        RTS
+
+;-------------------------------------------------------------------------
 ; WriteCurrentCharacterToCurrentXYPosBatch
 ;-------------------------------------------------------------------------
 WriteCurrentCharacterToCurrentXYPosBatch
-         JSR GetLinePtrForCurrentYPosition
-         LDA #20
-         STA BATCH_SIZE
-         JSR AddPixelToNMTUpdate
-         ;FIXME: Get Color
-;        LDA colorForCurrentCharacter
-         RTS
+        JSR GetLinePtrForCurrentYPosition
+        LDA #37
+        STA BATCH_SIZE
+        JSR AddPixelToNMTUpdate
+
+        ; If we've got a few to write, let them do that now.
+        CPX #BATCH_SIZE
+        BMI @UpdateComplete
+        JSR PPU_Update
+
+        ;FIXME: Get Color
+;       LDA colorForCurrentCharacter
+@UpdateComplete
+        RTS
 
 ;-------------------------------------------------------------------------
 ; WriteCurrentCharacterToCurrentXYPos
 ;-------------------------------------------------------------------------
 WriteCurrentCharacterToCurrentXYPos
-         JSR GetLinePtrForCurrentYPosition
-         JSR AddPixelToNMTUpdate
-         ;FIXME: Get Color
-;        LDA colorForCurrentCharacter
-         RTS
+        JSR GetLinePtrForCurrentYPosition
+        JSR AddPixelToNMTUpdate
+        ; If we've got a few to write, let them do that now.
+        CPX #40
+        BMI @UpdateComplete
+        JSR PPU_Update
+
+        ;FIXME: Get Color
+;       LDA colorForCurrentCharacter
+@UpdateComplete
+        RTS
 
 ;-------------------------------------------------------------------------
 ; GetCharacterAtCurrentXYPos
 ;-------------------------------------------------------------------------
 GetCharacterAtCurrentXYPos
-        JSR GetLinePtrForCurrentYPosition
+        JSR GetScreenBufferForCurrentPosition
         LDA (screenBufferLoPtr),Y
         RTS 
 
@@ -924,15 +954,19 @@ DrawNewLevelScreen
         STA zapperFrameRate
         LDA #$0A
         STA laserAndPodInterval
-        STA $D413    ;Voice 3: Attack / Decay Cycle Control
+;        STA $D413    ;Voice 3: Attack / Decay Cycle Control
         STA laserShootInterval
+
         JSR ClearPodArray
+
         LDA #$00
         STA backgroundSoundParm1
         STA backgroundSoundParm2
         STA noOfDroidSquadsCurrentLevel
+
         LDA #DROID1
         STA currentDroidCharacter
+
         LDA #$20
         STA a28
         LDA sizeOfDroidSquadForLevel
@@ -940,6 +974,7 @@ DrawNewLevelScreen
         STA sizeOfDroidSquadForLevel
         LDA droidsLeftToKill
         STA droidsLeftToKill
+
         LDA #$00
         STA a29
 ;        LDA #$0F
@@ -1041,7 +1076,7 @@ MainLoop
         JSR UpdateZappersPosition
         JSR DrawLaser
         JSR UpdatePods
-        JSR DrawUpdatedPods
+        JSR UpdateBombs
         JSR PlayBackgroundSounds
         JSR DrawDroids
         JSR ResetAnimationFrameRate
@@ -1417,23 +1452,27 @@ b863C   LDA laserShootInterval
         NOP 
         CMP #$07
         BNE b864E
+
         LDA #$05
         STA laserCurrentCharacter
 b864E   LDA #WHITE
         STA colorForCurrentCharacter
         LDA laserCurrentCharacter
         STA currentCharacter
+
         LDA #GRID_HEIGHT - 1
         STA bottomLaserYPosition
 b865A   LDA bottomLaserYPosition
         STA currentYPosition
         LDA bottomLaserXPosition
         STA currentXPosition
-        JSR WriteCurrentCharacterToCurrentXYPosBatch
+        JSR WriteCurrentCharacterToCurrentXYPosToNMTOnly
         DEC bottomLaserYPosition
         LDA bottomLaserYPosition
         CMP #$02
         BNE b865A
+        JSR PPU_Update
+
         LDA leftLaserYPosition
         STA currentYPosition
         LDA leftLaserXPosition
@@ -1441,6 +1480,7 @@ b865A   LDA bottomLaserYPosition
         JSR GetCharacterAtCurrentXYPos
         CMP laserCurrentCharacter
         BEQ b86A2
+
         LDA #GRID
         STA currentCharacter
         LDA #ORANGE
@@ -1452,6 +1492,7 @@ b865A   LDA bottomLaserYPosition
         JSR CheckCurrentCharacterForShip
         CMP laserCurrentCharacter
         BEQ b86A2
+
         LDA #WHITE
         STA colorForCurrentCharacter
         LDA laserCurrentCharacter
@@ -1459,6 +1500,7 @@ b865A   LDA bottomLaserYPosition
         SBC #$01
         STA currentCharacter
         JMP WriteCurrentCharacterToCurrentXYPosBatch
+        ;Returns
 
 b86A2   LDA #GRID_HEIGHT - 1
         STA currentYPosition
@@ -1468,11 +1510,13 @@ b86A2   LDA #GRID_HEIGHT - 1
         STA colorForCurrentCharacter
         LDA #GRID
         STA currentCharacter
-b86B2   JSR WriteCurrentCharacterToCurrentXYPosBatch
+b86B2   JSR WriteCurrentCharacterToCurrentXYPosToNMTOnly
         DEC currentYPosition
         LDA currentYPosition
         CMP #$02
         BNE b86B2
+        JSR PPU_Update
+
         LDA leftLaserYPosition
         STA currentYPosition
         LDA #YELLOW
@@ -1482,6 +1526,7 @@ b86B2   JSR WriteCurrentCharacterToCurrentXYPosBatch
         LDA #$00
         STA laserShootInterval
         JMP WriteCurrentCharacterToCurrentXYPosBatch
+        ; Returns
 
 ;-------------------------------------------------------------------------
 ; UpdateLaserCharacter
@@ -1492,6 +1537,42 @@ UpdateLaserCharacter
         LDA laserCurrentCharacter
         RTS 
 
+;-------------------------------------------------------------------------
+; WriteBombUpdateToNMT
+;-------------------------------------------------------------------------
+WriteBombUpdateToNMT
+        STA currentCharacter
+
+        ; Update the screen buffer first.
+        STA (bombLoPtr),Y
+
+        ; Write to the actual screen (the PPU).
+        LDX NMT_UPDATE_LEN
+
+        LDA bombHiPtr
+        ; screenBuffer starts at $6000 so we mask
+        ; it to get the equivalent at $2000
+        AND #$3F
+        STA NMT_UPDATE, X
+        INX
+
+        LDA bombLoPtr
+        STA NMT_UPDATE, X
+        INX
+
+        LDA currentCharacter
+        STA NMT_UPDATE, X
+        INX
+
+        STX NMT_UPDATE_LEN
+
+        ; If we've got a few to write, let them do that now.
+        ;CPX #$10
+        ;BMI @UpdateComplete
+        JSR PPU_Update
+
+@UpdateComplete
+        RTS
 ;-------------------------------------------------------------------------
 ; WritePodUpdateToNMT
 ;-------------------------------------------------------------------------
@@ -1533,7 +1614,6 @@ WritePodUpdateToNMT
 ; UpdatePods
 ;-------------------------------------------------------------------------
 UpdatePods
-        RTS
         LDA laserAndPodInterval
         CMP #$05
         BEQ b86DE
@@ -1541,9 +1621,9 @@ UpdatePods
 
 b86DE   DEC laserAndPodInterval
 
-        LDA #>SCREEN_RAM + $0050
+        LDA #>(SCREEN_RAM + $0050)
         STA podScreenHiPtr
-        LDA #<SCREEN_RAM + $0050
+        LDA #<(SCREEN_RAM + $0050)
         STA podScreenLoPtr
 
         LDY #$00
@@ -1555,7 +1635,7 @@ NextPod
         BNE b86EA
         INC podScreenHiPtr
         LDA podScreenHiPtr
-        CMP #$08
+        CMP #$64
         BNE b86EA
         RTS 
 
@@ -1592,8 +1672,8 @@ DrawBomb
         LDA #BOMB_DOWN
         JSR WritePodUpdateToNMT
 
-        LDX #$18
-b872E   LDA podHiPtrArray,X
+        LDX #29
+b872E   LDA bombHiPtrArray,X
         CMP #$FF
         BEQ b873D
         DEX 
@@ -1604,9 +1684,9 @@ b872E   LDA podHiPtrArray,X
         RTS 
 
 b873D   LDA podScreenLoPtr
-        STA podLoPtrArray,X
+        STA bombLoPtrArray,X
         LDA podScreenHiPtr
-        STA podHiPtrArray,X
+        STA bombHiPtrArray,X
         RTS 
 
 ;-------------------------------------------------------------------------
@@ -1615,81 +1695,89 @@ b873D   LDA podScreenLoPtr
 ClearPodArray
         LDX #$20
         LDA #$FF
-b874C   STA podHiPtrArray,X
+b874C   STA bombHiPtrArray,X
         DEX 
         BNE b874C
         RTS 
 
 ;-------------------------------------------------------------------------
-; DrawUpdatedPods
+; UpdateBombs
 ;-------------------------------------------------------------------------
-DrawUpdatedPods
+UpdateBombs
         DEC podUpdateRate
         BEQ b8758
         RTS 
 
 b8758   LDA #$40
         STA podUpdateRate
-        LDX #$18
-b875E   LDA podHiPtrArray,X
+        LDX #29
+b875E   LDA bombHiPtrArray,X
         CMP #$FF
         BEQ b8768
-        JSR DrawPods
+        JSR DrawFallingBomb
 b8768   DEX 
         BNE b875E
         RTS 
 
 ;-------------------------------------------------------------------------
-; DrawPods
+; DrawFallingBomb
 ;-------------------------------------------------------------------------
-DrawPods
-        LDA podLoPtrArray,X
-        STA podLoPtr
-        LDA podHiPtrArray,X
-        STA podHiPtr
+DrawFallingBomb
+        LDA bombLoPtrArray,X
+        STA bombLoPtr
+        LDA bombHiPtrArray,X
+        STA bombHiPtr
         LDY #$00
-        LDA (podLoPtr),Y
+        LDA (bombLoPtr),Y
         CMP #SHIP
         BNE b8781
         JMP JumpToDrawGridCharAtOldPosAndCheckCollisions
 
 b8781   LDA #$00
-        STA (podLoPtr),Y
-        LDA podHiPtr
+        STX temp
+        JSR WriteBombUpdateToNMT
+        LDX temp
+
+;        LDA bombHiPtr
+;        CLC 
+;        ADC #$D4
+;        STA bombHiPtr
+;        LDA #$08
+;        STA (bombLoPtr),Y
+
+        LDA bombLoPtrArray,X
         CLC 
-        ADC #$D4
-        STA podHiPtr
-        LDA #$08
-        STA (podLoPtr),Y
-        LDA podLoPtrArray,X
-        CLC 
-        ADC #$28
-        STA podLoPtrArray,X
-        LDA podHiPtrArray,X
+        ADC #32
+        STA bombLoPtrArray,X
+
+        LDA bombHiPtrArray,X
         ADC #$00
-        STA podHiPtrArray,X
-        STA podHiPtr
-        LDA podLoPtrArray,X
-        STA podLoPtr
-        LDA (podLoPtr),Y
+        STA bombHiPtrArray,X
+        STA bombHiPtr
+
+        LDA bombLoPtrArray,X
+        STA bombLoPtr
+        LDA (bombLoPtr),Y
         CMP #$20
         BNE b87B4
         LDA #$FF
-        STA podHiPtrArray,X
+        STA bombHiPtrArray,X
         RTS 
 
 b87B4   CMP #SHIP
         BNE b87BB
         JMP JumpToDrawGridCharAtOldPosAndCheckCollisions
 
-b87BB   LDA #$0A
-        STA (podLoPtr),Y
-        LDA podHiPtr
-        CLC 
-        ADC #$D4
-        STA podHiPtr
-        LDA #$01
-        STA (podLoPtr),Y
+b87BB   LDA #BOMB_DOWN
+        STX temp
+        JSR WriteBombUpdateToNMT
+        LDX temp
+;        LDA bombHiPtr
+;        CLC 
+;        ADC #$D4
+;        STA bombHiPtr
+;        LDA #$01
+;        STA (bombLoPtr),Y
         RTS 
 
 ;-------------------------------------------------------------------------
@@ -1702,7 +1790,6 @@ b87CD   CMP PodDecaySequence,X
         DEX 
         BNE b87CD
         JMP CheckIfBulletCollidedWithDroid
-
         RTS 
 
 b87D9   DEX 
@@ -1767,12 +1854,12 @@ screenHeaderColors .BYTE $34,$03,$03,$03,$03,$04,$04,$04
 IncrementPlayerScore   
         TXA 
         PHA 
-b8872   INC SCREEN_RAM + $000F,X
-        LDA SCREEN_RAM + $000F,X
+b8872   INC SCREEN_RAM + $0008,X
+        LDA SCREEN_RAM + $0008,X
         CMP #$3A
         BNE b8884
         LDA #$30
-        STA SCREEN_RAM + $000F,X
+        STA SCREEN_RAM + $0008,X
         DEX 
         BNE b8872
 b8884   PLA 
@@ -1878,12 +1965,13 @@ DrawDroidsLoop
         STA colorForCurrentCharacter
         LDA #DROID1
         STA currentCharacter
-        JSR WriteCurrentCharacterToCurrentXYPos
+        JSR WriteCurrentCharacterToCurrentXYPosBatch
 
 ResumeDrawingDroids
         LDX currentDroidIndex
         DEX 
         BNE DrawDroidsLoop
+        JSR PPU_Update
         RTS 
 
 b892A   LDA droidStatusArray,X
@@ -1924,7 +2012,7 @@ j896A   LDA currentXPosition
         STA colorForCurrentCharacter
         LDA currentDroidCharacter
         STA currentCharacter
-        JSR WriteCurrentCharacterToCurrentXYPos
+        JSR WriteCurrentCharacterToCurrentXYPosBatch
         LDX currentDroidIndex
         JMP ResumeDrawingDroids
 
@@ -2518,13 +2606,13 @@ DisplayNewLevelInterstitial
         JSR ClearScreenBuffer
         LDX #$12
 b8C35   LDA txtBattleStations,X
-        STA SCREEN_RAM + $00FD,X
+        STA SCREEN_RAM + $00E0,X
         LDA #$0E
-        STA COLOR_RAM + $00FD,X
+        STA COLOR_RAM + $00E0,X
         LDA txtEnterGridArea,X
-        STA SCREEN_RAM + $014D,X
+        STA SCREEN_RAM + $0123,X
         LDA #$01
-        STA COLOR_RAM + $014D,X
+        STA COLOR_RAM + $0123,X
         DEX 
         BNE b8C35
 
@@ -2541,8 +2629,8 @@ txtEnterGridArea =*-$01
         .BYTE $22,$24,$25,$20,$28,$22,$27,$28
         .BYTE $20,$30,$30
 
-displayedLevelDigitTwo = SCREEN_RAM + $015F
-displayedLevelDigitOne = SCREEN_RAM + $015F
+displayedLevelDigitTwo = SCREEN_RAM + $0135
+displayedLevelDigitOne = SCREEN_RAM + $0134
 ;---------------------------------------------------------------------------------
 ; PrepareNextLevel   
 ;---------------------------------------------------------------------------------
@@ -2585,13 +2673,7 @@ IncrementLevel
         INC displayedLevelDigitOne
 b8CAF   DEX 
         BNE IncrementLevel
-
-        LDA <displayedLives
-        STA screenLineLoPtr
-        LDA >displayedLives
-        STA screenLineHiPtr
-        LDA displayedLives
-        JSR WriteValueToScreen
+        JSR WriteScreenBufferToNMT
 
         JMP SetVolumeAndPlaySounds
 

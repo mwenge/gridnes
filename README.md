@@ -1,7 +1,7 @@
-# Psychedelia by Jeff Minter (NES)
+# Gridrunner by Jeff Minter (NES)
 <img src="https://user-images.githubusercontent.com/58846/236032019-893943fa-659e-4ac0-9242-4ed6b0fe3a4f.gif" height=300><img src="https://user-images.githubusercontent.com/58846/236034673-b2414ffb-12a7-4650-966b-c276b5b374a7.jpg" height=300>
 
-Jeff Minter never ported his game [Psychedelia] to the Nintendo Entertainment system. So I did. Maybe I don't know what I'm doing.
+Jeff Minter never ported his game [Gridrunner] to the Nintendo Entertainment system. So I did. Maybe I don't know what I'm doing.
 
 <!-- vim-markdown-toc GFM -->
 
@@ -18,10 +18,10 @@ On Ubuntu you can install [FCEUX], the NES emulator, as follows:
 sudo apt install fceux
 ```
 
-Once you have that installed, you can [download the game](https://github.com/mwenge/psynes/raw/master/bin/psychedelia.nes) and play it:
+Once you have that installed, you can [download the game](https://github.com/mwenge/psynes/raw/master/bin/gridrunner.nes) and play it:
 
 ```
-fceux psychedelia.nes
+fceux gridrunner.nes
 ```
 
 ### Controls
@@ -42,7 +42,7 @@ $ make
 ```
 
 ## About
-Made out of curiosity as part of the [Psychedelia](https://github.com/mwenge/psychedelia) project.
+Made out of curiosity as part of the [Gridrunner](https://github.com/mwenge/gridrunner) project.
 This [example project](https://github.com/bbbradsmith/NES-ca65-example/) was a big help in getting started.
 Let's face it: it's slow. I'm still thinking of what I can do about that.
 
@@ -50,8 +50,4 @@ Let's face it: it's slow. I'm still thinking of what I can do about that.
 [cc65]: https://cc65.github.io/
 [FCEUX]: https://fceux.com/
 [llamaSource]: https://en.wikipedia.org/wiki/Trip-a-Tron
-[Neon]: https://en.wikipedia.org/wiki/Neon_(light_synthesizer)
-[first realized concept]: http://www.minotaurproject.co.uk/psychedelia.php
-[Psychedelia]: https://en.wikipedia.org/wiki/Psychedelia_(light_synthesizer)
-[atari800]: https://atari800.github.io/
-[hatari]: https://hatari.tuxfamily.org/download.html
+[Gridrunner]: https://en.wikipedia.org/wiki/Gridrunner_(light_synthesizer)
