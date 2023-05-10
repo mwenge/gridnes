@@ -1,5 +1,4 @@
 # Gridrunner by Jeff Minter (NES)
-<img src="https://user-images.githubusercontent.com/58846/236032019-893943fa-659e-4ac0-9242-4ed6b0fe3a4f.gif" height=300><img src="https://user-images.githubusercontent.com/58846/236034673-b2414ffb-12a7-4650-966b-c276b5b374a7.jpg" height=300>
 
 Jeff Minter never ported his game [Gridrunner] to the Nintendo Entertainment system. So I did. Maybe I don't know what I'm doing.
 
@@ -25,9 +24,7 @@ fceux gridrunner.nes
 ```
 
 ### Controls
-You have less fine-grained control than on the C64 version as this version uses the gamepad only. Apart from
-moving the cursor around and firing, the other buttons on your gamepad will cycle through the available
-symmetries and preset patterns. 
+On FCEUX, you can use F to fire and the Arrow keys to move.
 
 ## Build
 On Ubuntu you can install the build dependencies as follows:
