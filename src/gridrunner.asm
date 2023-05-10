@@ -2624,13 +2624,13 @@ DisplayNewLevelInterstitial
         JSR ClearScreenBuffer
         LDX #$12
 b8C35   LDA txtBattleStations,X
-        STA SCREEN_RAM + $00E0,X
+        STA SCREEN_RAM + $00E5,X
         LDA #$0E
-        STA COLOR_RAM + $00E0,X
+        STA COLOR_RAM + $00E5,X
         LDA txtEnterGridArea,X
-        STA SCREEN_RAM + $0123,X
+        STA SCREEN_RAM + $0125,X
         LDA #$01
-        STA COLOR_RAM + $0123,X
+        STA COLOR_RAM + $0125,X
         DEX 
         BNE b8C35
 
@@ -2647,8 +2647,8 @@ txtEnterGridArea =*-$01
         .BYTE $22,$24,$25,$20,$28,$22,$27,$28
         .BYTE $20,$30,$30
 
-displayedLevelDigitTwo = SCREEN_RAM + $0135
-displayedLevelDigitOne = SCREEN_RAM + $0134
+displayedLevelDigitTwo = SCREEN_RAM + $0137
+displayedLevelDigitOne = SCREEN_RAM + $0136
 ;---------------------------------------------------------------------------------
 ; PrepareNextLevel   
 ;---------------------------------------------------------------------------------
@@ -2717,13 +2717,13 @@ laserFrameRateForLevel    =*-$01
 ;---------------------------------------------------------------------------------
 PlayNewLevelSounds   
 
-;        LDA #$30
-;        STA soundEffectControl
-;b8D1A   LDA soundEffectControl
+        LDA #$30
+        STA soundEffectControl
+b8D1A   LDA soundEffectControl
 ;        STA COLOR_RAM + $015F
 ;        STA COLOR_RAM + $015E
-;        LDX soundEffectControl
-;b8D24   JSR Waste20Cycles
+        LDX soundEffectControl
+b8D24   JSR Waste20Cycles
 ;        JSR SoundEffect
 ;        NOP 
 ;        STA $D408    ;Voice 2: Frequency Control - High-Byte
@@ -2737,17 +2737,17 @@ PlayNewLevelSounds
 ;        STA $D404    ;Voice 1: Control Register
 ;        STA $D40B    ;Voice 2: Control Register
 ;        STA $D412    ;Voice 3: Control Register
-;        DEX 
-;        BNE b8D24
-;        DEC soundEffectControl
-;        BNE b8D1A
+        DEX 
+        BNE b8D24
+        DEC soundEffectControl
+        BNE b8D1A
         JMP DrawNewLevelScreen
 
 ;-------------------------------------------------------------------------
 ; Waste20Cycles
 ;-------------------------------------------------------------------------
 Waste20Cycles
-        LDA #$20
+        LDA #$FF
         JMP WasteAFewCycles
 
 ;---------------------------------------------------------------------------------
