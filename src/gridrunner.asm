@@ -1404,7 +1404,7 @@ b85ED   LDA bottomZapperXPosition
         STA currentXPosition
         LDA #BOTTOM_ZAPPER
         STA currentCharacter
-        JMP DrawBottomZapperAndResetIfNecessary
+        JMP DrawBottomZapperAndMaybeFireLaser
 
 ;-------------------------------------------------------------------------
 ; WriteAccumulatorToXYPos
@@ -1415,9 +1415,9 @@ WriteAccumulatorToXYPos
         ;Returns
 
 ;---------------------------------------------------------------------------------
-; DrawBottomZapperAndResetIfNecessary   
+; DrawBottomZapperAndMaybeFireLaser   
 ;---------------------------------------------------------------------------------
-DrawBottomZapperAndResetIfNecessary   
+DrawBottomZapperAndMaybeFireLaser   
         JSR WriteCurrentCharacterToCurrentXYPos
         DEC laserAndPodInterval
         BEQ b8605
@@ -2706,7 +2706,7 @@ sizeOfDroidSquadsForLevels    =*-$01
         .BYTE $10,$11,$12,$13,$14,$14,$14,$15
         .BYTE $15,$16,$16,$16,$17,$03,$18,$18,$19
 laserFrameRateForLevel    =*-$01
-        .BYTE $10,$10,$10,$0F,$0E,$0D,$0C
+        .BYTE $12,$12,$12,$0F,$0E,$0D,$0C
         .BYTE $0B,$0A,$09,$09,$09,$09,$09,$09
         .BYTE $09,$08,$08,$08,$08,$07,$07,$07
         .BYTE $07,$07,$07,$07,$07,$07,$06,$06
