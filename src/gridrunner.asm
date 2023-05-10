@@ -1,4 +1,4 @@
-; This is the reverse-engineered source code for the game 'Matrix' written by Jeff Minter in 1983
+; This is the reverse-engineered source code for the game 'Gridrunner' written by Jeff Minter in 1982
 ; adapted for the Nintendo Entertainment System.
 ;
 ; The code in this file was created by disassembling a binary of the game released into
