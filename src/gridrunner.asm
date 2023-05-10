@@ -1,11 +1,12 @@
-; This is the reverse-engineered source code for the game 'Matrix' written by Jeff Minter in 1983.
+; This is the reverse-engineered source code for the game 'Matrix' written by Jeff Minter in 1983
+; adapted for the Nintendo Entertainment System.
 ;
 ; The code in this file was created by disassembling a binary of the game released into
 ; the public domain by Jeff Minter in 2019.
 ;
 ; The original code from which this source is derived is the copyright of Jeff Minter.
 ;
-; The original home of this file is at: https://github.com/mwenge/matrix
+; The original home of this file is at: https://github.com/mwenge/gridnes
 ;
 ; To the extent to which any copyright may apply to the act of disassembling and reconstructing
 ; the code from its binary, the author disclaims copyright to this source code.  In place of
@@ -15,7 +16,6 @@
 ;    May you find forgiveness for yourself and forgive others.
 ;    May you share freely, never taking more than you give.
 ;
-; (Note: I ripped this part from the SQLite licence! :) )
 ;
 
 .feature labels_without_colons
@@ -68,36 +68,27 @@ laserFrameRate                .res 1
 selectedLevel                 .res 1
 soundEffectControl            .res 1
 lastKeyPressed                .res 1
-gridXPos .res 1
-gridYPos .res 1
-bombLoPtr .res 1
-bombHiPtr .res 1
+gridXPos                      .res 1
+gridYPos                      .res 1
+bombLoPtr                     .res 1
+bombHiPtr                     .res 1
 
-podScreenLoPtr .res 1
-podScreenHiPtr .res 1
+podScreenLoPtr                .res 1
+podScreenHiPtr                .res 1
 
-screenBufferLoPtr                .RES 1
-screenBufferHiPtr                .RES 1
+screenBufferLoPtr             .RES 1
+screenBufferHiPtr             .RES 1
 
-previousFrameButtons             .res 1
-buttons                          .res 1
-pressedButtons                   .res 1
-releasedButtons                  .res 1
+previousFrameButtons          .res 1
+buttons                       .res 1
+pressedButtons                .res 1
+releasedButtons               .res 1
 
-temp .res 1
+temp                          .res 1
 
 .segment "RAM"
-screenLinesLoPtrArray
-        .BYTE $00,$00,$00,$00,$00,$00,$00,$00
-        .BYTE $00,$00,$00,$00,$00,$00,$00,$00
-        .BYTE $00,$00,$00,$00,$00,$00,$00,$00
-        .BYTE $00,$00,$00,$00,$00,$00
-screenLinesHiPtrArray
-        .BYTE $00,$00,$00,$00,$00,$00,$BF,$00
-        .BYTE $00,$00,$00,$00,$00,$00,$00,$00
-        .BYTE $00,$00,$00,$00,$00,$00,$00,$00
-        .BYTE $00,$00,$00,$00,$00,$00
-        
+screenLinesLoPtrArray .res 30
+screenLinesHiPtrArray .res 30
 
 ; Importsant: SRAM must start with screenBuffer
 ; because we depend on it starting at $6000.
@@ -114,54 +105,60 @@ screenBufferHiPtrArray
         .BYTE $00,$00,$00,$00,$00,$00,$00,$00
         .BYTE $00,$00,$00,$00,$00,$00
 
-bombLoPtrArray                 .res 32 
-bombHiPtrArray                 .res 32
-droidXPositionArray           .res $100 
-droidYPositionArray           .res $100 
-droidStatusArray              .res $100 
-explosionXPosArray            .res $100 
-explosionYPosArray            .res $100 
+bombLoPtrArray                .res 32
+bombHiPtrArray                .res 32
+droidXPositionArray           .res  $100
+droidYPositionArray           .res  $100
+droidStatusArray              .res  $100
+explosionXPosArray            .res  $100
+explosionYPosArray            .res  $100
+
 .segment "CODE"
-
 ; The raw address for PPU's screen ram.
-PPU_SCREEN_RAM                = $2000
+PPU_SCREEN_RAM     = $2000
 ; SCREEN_RAM is our address to screenBuffer
-SCREEN_RAM                    = $6000
-COLOR_RAM                     = $8000
+SCREEN_RAM         = $6000
+COLOR_RAM          = $8000
 
-GRID                          = $00
-LEFT_ZAPPER                   = $01
-BOTTOM_ZAPPER                 = $02
-SHIP                          = $07
-BULLET_UP1                    = $08
-BOMB_DOWN                     = $0A
-POD3                          = $0F
-POD6                          = $12
-DROID1                        = $13
-EXPLOSION1                    = $16
-SPACE                         = $20
-VERTICAL_LINE                 = $3F
-EXPLOSION3                    = $18
+GRID               = $00
+LEFT_ZAPPER        = $01
+BOTTOM_ZAPPER      = $02
+SHIP               = $07
+BULLET_UP1         = $08
+BOMB_DOWN          = $0A
+POD3               = $0F
+POD6               = $12
+DROID1             = $13
+EXPLOSION1         = $16
+SPACE              = $20
+VERTICAL_LINE      = $3F
+EXPLOSION3         = $18
 
-WHITE                         = $01
-RED                           = $02
-CYAN                          = $03
-GREEN                         = $05
-YELLOW                        = $07
-ORANGE                        = $08
-LTGREEN                       = $0D
+START_X_POS        = 15
+START_Y_POS        = 27
+MATERIALIZE_OFFSET = $0D
 
-PAD_A      = $01
-PAD_B      = $02
-PAD_SELECT = $04
-PAD_START  = $08
-PAD_U      = $10
-PAD_D      = $20
-PAD_L      = $40
-PAD_R      = $80
+WHITE              = $01
+RED                = $02
+CYAN               = $03
+GREEN              = $05
+YELLOW             = $07
+ORANGE             = $08
+LTGREEN            = $0D
 
+PAD_A              = $01
+PAD_B              = $02
+PAD_SELECT         = $04
+PAD_START          = $08
+PAD_U              = $10
+PAD_D              = $20
+PAD_L              = $40
+PAD_R              = $80
+
+; This is the header information for the ROM file.
+; Lots of stuff configured in here which you have to look
+; up online in order to understand it!
 .SEGMENT "HEADER"
-
 INES_MAPPER = 0 ; 0 = NROM
 INES_MIRROR = 1 ; 0 = HORIZONTAL MIRRORING, 1 = VERTICAL MIRRORING
 INES_SRAM   = 1 ; 1 = BATTERY BACKED SRAM AT $6000-7FFF
@@ -180,9 +177,9 @@ INES_SRAM   = 1 ; 1 = BATTERY BACKED SRAM AT $6000-7FFF
 .SEGMENT "TILES"
 .include "charset.asm"
 
-
 ;
-; VECTORS PLACED AT TOP 6 BYTES OF MEMORY AREA
+; Configure each of the NMT Interrupt handler, the Initialization routine
+; and the IRQ Interrupt handler.
 ;
 
 .SEGMENT "VECTORS"
@@ -202,8 +199,8 @@ TEMP           .res 1 ; TEMPORARY VARIABLE
 BATCH_SIZE     .res 1
 
 .segment "RAM"
-NMT_UPDATE .res 256 ; NAMETABLE UPDATE ENTRY BUFFER FOR PPU UPDATE
-PALETTE    .res 32  ; PALETTE BUFFER FOR PPU UPDATE
+NMT_UPDATE     .res 256 ; NAMETABLE UPDATE ENTRY BUFFER FOR PPU UPDATE
+PALETTE        .res 32  ; PALETTE BUFFER FOR PPU UPDATE
 
 .segment "RODATA"
 example_palette
@@ -217,14 +214,21 @@ example_palette
 .byte $0F,$12,$22,$32 ; sp3 marine
 
 .segment "CODE"
+;-------------------------------------------------------
+; IRQInterruptHandler
+; As you can see, we don't use this.
+;-------------------------------------------------------
 IRQInterruptHandler
         RTI
 
 ;-------------------------------------------------------
 ; InitializeNES
+; THis is where execution starts.
 ;-------------------------------------------------------
 InitializeNES
-        SEI       ; MASK INTERRUPTS
+        ; Disabling IRQ interrupts
+        SEI
+
         LDA #0
         STA $2000 ; DISABLE NMI
         STA $2001 ; DISABLE RENDERING
@@ -273,6 +277,7 @@ InitializeNES
 
 ;-------------------------------------------------------
 ; MainNMIInterruptHandler
+; This is where the actual drawing to screen is done.
 ;-------------------------------------------------------
 MainNMIInterruptHandler
         ; save registers
@@ -378,8 +383,8 @@ MainNMIInterruptHandler
         RTI
 
 ;-------------------------------------------------------
-; ppu_update:
-; ppu_update: waits until next NMI, turns rendering on (if not already),
+; PPU_Update
+; PPU_Update waits until next NMI, turns rendering on (if not already),
 ; uploads OAM, palette, and nametable update to PPU
 ;-------------------------------------------------------
 PPU_Update
@@ -391,7 +396,7 @@ PPU_Update
         RTS
 
 ;-------------------------------------------------------
-; ppu_off: waits until next NMI, turns rendering off (now safe to write PPU
+; PPU_Off waits until next NMI, turns rendering off (now safe to write PPU
 ; directly via $2007)
 ;-------------------------------------------------------
 PPU_Off
@@ -401,9 +406,6 @@ PPU_Off
           LDA NMI_READY
           BNE :-
         RTS
-
-.segment "CODE"
-
 
 ;-------------------------------------------------------------------------
 ; CheckCurrentCharacterForShip
@@ -494,7 +496,6 @@ b80CB   JSR WasteSomeCycles
         DEX 
         BNE b80CB
 
-
         RTS 
 
 ;---------------------------------------------------------------------------------
@@ -519,8 +520,6 @@ WaitForKeyToBeReleased
         BEQ WaitForKeyToBeReleased
         RTS 
 
-vicRegisterLoPtr = $02
-vicRegisterYPtr = $03
 ;---------------------------------------------------------------------------------
 ; InitializeGame   
 ;---------------------------------------------------------------------------------
@@ -847,9 +846,6 @@ b8240   LDA randomValue
         ;STA $D408    ;Voice 2: Frequency Control - High-Byte
         JMP j8237
 
-START_X_POS = 15 
-START_Y_POS = 27
-MATERIALIZE_OFFSET = $0D
 ;-------------------------------------------------------------------------
 ; MaterializeShip
 ;-------------------------------------------------------------------------
@@ -1661,7 +1657,7 @@ b86FB   CMP #$20
         BEQ NextPod
 
         LDX #$07
-b8701   CMP PodDecaySequence,X
+b8701   CMP podDecaySequence,X
         BEQ b870C
         DEX 
         BNE b8701
@@ -1671,7 +1667,7 @@ b870C   CPX #$07
         BEQ b8719
 
         INX 
-        LDA PodDecaySequence,X
+        LDA podDecaySequence,X
         JSR WritePodUpdateToNMT
         JMP NextPod
 
@@ -1680,7 +1676,7 @@ b8719   JSR DrawBomb
 
 ; This is the sequence in which the yellow pods decay before exploding.
 ; Each byte is a char representing a stage of decay, working from left to right.
-PodDecaySequence
+podDecaySequence
         .BYTE $EA,$18,$0D,$0E,$0F,$10,$11
         .BYTE $12,$13
 ;-------------------------------------------------------------------------
@@ -1803,7 +1799,7 @@ b87BB   LDA #BOMB_DOWN
 ;-------------------------------------------------------------------------
 BulletCollidedWithPod
         LDX #$07
-b87CD   CMP PodDecaySequence,X
+b87CD   CMP podDecaySequence,X
         BEQ b87D9
         DEX 
         BNE b87CD
@@ -1812,7 +1808,7 @@ b87CD   CMP PodDecaySequence,X
 
 b87D9   DEX 
         BEQ b87EC
-        LDA PodDecaySequence,X
+        LDA podDecaySequence,X
         STA currentCharacter
         LDA #YELLOW
         STA colorForCurrentCharacter
@@ -2074,7 +2070,7 @@ ResetAnimationFrameRate
 ;-------------------------------------------------------------------------
 CheckIfBlockedByPod
         LDX #$07
-b89AD   CMP PodDecaySequence,X
+b89AD   CMP podDecaySequence,X
         BEQ b89B8
         DEX 
         BNE b89AD
@@ -2240,16 +2236,16 @@ b8AA6   DEX
         NOP 
         NOP 
         LDX currentDroidIndex
-        JSR s8AC1
+        JSR UpdateDroidStatusArray
         LDA droidStatusArray - $01,X
         ORA #$80
         STA droidStatusArray - $01,X
         RTS 
 
 ;-------------------------------------------------------------------------
-; s8AC1
+; UpdateDroidStatusArray
 ;-------------------------------------------------------------------------
-s8AC1
+UpdateDroidStatusArray
         ORA droidStatusArray + $01,X
         STA droidStatusArray + $01,X
         RTS 
