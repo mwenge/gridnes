@@ -141,6 +141,7 @@ DROID1                        = $13
 EXPLOSION1                    = $16
 SPACE                         = $20
 VERTICAL_LINE                 = $3F
+EXPLOSION3                    = $18
 
 WHITE                         = $01
 RED                           = $02
@@ -698,7 +699,7 @@ WriteCurrentCharacterToCurrentXYPos
         JSR GetLinePtrForCurrentYPosition
         JSR AddPixelToNMTUpdate
         ; If we've got a few to write, let them do that now.
-        CPX #40
+        CPX #60
         BMI @UpdateComplete
         JSR PPU_Update
 
@@ -846,11 +847,14 @@ b8240   LDA randomValue
         ;STA $D408    ;Voice 2: Frequency Control - High-Byte
         JMP j8237
 
+START_X_POS = 15 
+START_Y_POS = 27
+MATERIALIZE_OFFSET = $0D
 ;-------------------------------------------------------------------------
 ; MaterializeShip
 ;-------------------------------------------------------------------------
 MaterializeShip
-        LDA #$0F
+        LDA #MATERIALIZE_OFFSET
         STA materializeShipOffset
 ;        LDA #$02
 ;        STA $D408    ;Voice 2: Frequency Control - High-Byte
@@ -866,65 +870,121 @@ MaterializeShipLoop
 ;        STA $D40B    ;Voice 2: Control Register
 ;        LDA #$81
 ;        STA $D40B    ;Voice 2: Control Register
-        LDA #$15
+
+        LDA #START_Y_POS
         STA currentYPosition
-        LDA #$14
+        LDA #START_X_POS
         CLC 
         SBC materializeShipOffset
         STA currentXPosition
         JSR WriteCurrentCharacterToCurrentXYPos
-        LDA #$14
+
+        LDA #START_X_POS
         CLC 
         ADC materializeShipOffset
         STA currentXPosition
+
         JSR WriteCurrentCharacterToCurrentXYPos
+
         LDA currentYPosition
         CLC 
         SBC materializeShipOffset
         STA currentYPosition
         JSR WriteCurrentCharacterToCurrentXYPos
-        LDA #$14
+
+        LDA #START_X_POS
         STA currentXPosition
         JSR WriteCurrentCharacterToCurrentXYPos
-        LDA #$14
+
+        LDA #START_X_POS
         SBC materializeShipOffset
         STA currentXPosition
         JSR WriteCurrentCharacterToCurrentXYPos
+
         INC currentCharacter
         LDA currentCharacter
-        CMP #$19
+        CMP #EXPLOSION3 + 1
         BNE b82AE
+
         LDA #EXPLOSION1
 b82AE   STA currentExplosionCharacter
+
         LDX materializeShipOffset
-b82B2   JSR MaybeWasteSomeCycles
+@Loop   
+        JSR MaybeWasteSomeCycles
         DEX 
-        BNE b82B2
+        BNE @Loop
+
         LDA #GRID
         STA currentCharacter
         LDA #ORANGE
         STA colorForCurrentCharacter
-        LDA #$14
+        LDA #START_X_POS
         STA currentXPosition
         JSR WriteCurrentCharacterToCurrentXYPos
-        LDA #$14
+
+        LDA #START_X_POS
         CLC 
         SBC materializeShipOffset
         STA currentXPosition
         JSR WriteCurrentCharacterToCurrentXYPos
-        LDA #$14
+
+        LDA #START_X_POS
         CLC 
         ADC materializeShipOffset
         STA currentXPosition
         JSR WriteCurrentCharacterToCurrentXYPos
-        LDA #$15
+
+        LDA #START_Y_POS
         STA currentYPosition
         JSR WriteCurrentCharacterToCurrentXYPos
-        LDA #$14
+
+        LDA #START_X_POS
         CLC 
         SBC materializeShipOffset
         STA currentXPosition
-        JMP DrawMaterializeShip
+        JSR WriteCurrentCharacterToCurrentXYPos
+
+        LDA currentExplosionCharacter
+        STA currentCharacter
+
+        DEC materializeShipOffset
+        LDA materializeShipOffset
+        CMP #$FF
+        BEQ @Complete
+
+        LDA #$0F
+        CLC 
+        SBC materializeShipOffset
+;        STA $D418    ;Select Filter Mode and Volume
+        JMP MaterializeShipLoop
+
+@Complete
+        LDA #SHIP
+        STA currentCharacter
+        LDA #LTGREEN
+        STA colorForCurrentCharacter
+        LDA #START_Y_POS
+        STA currentYPosition
+        LDA #START_X_POS
+        STA currentXPosition
+        JSR WriteCurrentCharacterToCurrentXYPos
+
+;        LDA #$0F
+;        STA $D418    ;Select Filter Mode and Volume
+;        JSR PlayMaterializeShipSoundEffects
+;        LDA #$08
+;        STA $D418    ;Select Filter Mode and Volume
+;        JSR PlayMaterializeShipSoundEffects
+;        LDA #$02
+;        STA $D418    ;Select Filter Mode and Volume
+;        JSR PlayMaterializeShipSoundEffects
+;        LDA #$00
+;        STA $D40B    ;Voice 2: Control Register
+;        LDA #$0F
+;        STA $D418    ;Select Filter Mode and Volume
+        RTS 
+
 
 ;---------------------------------------------------------------------------------
 ; DrawNewLevelScreen   
@@ -940,9 +1000,9 @@ DrawNewLevelScreen
 ;        STA $D414    ;Voice 3: Sustain / Release Cycle Control
         JSR DrawGrid
         JSR MaterializeShip
-        LDA #$14
+        LDA #START_X_POS
         STA previousXPosition
-        LDA #$15
+        LDA #START_Y_POS
         STA previousYPosition
         LDA #$FF
         STA currentBulletYPosition
@@ -1093,48 +1153,6 @@ b83EA   DEX
         JMP EnterMainGameLoop
 
         JMP EnterMainGameLoop
-
-;---------------------------------------------------------------------------------
-; DrawMaterializeShip   
-;---------------------------------------------------------------------------------
-DrawMaterializeShip   
-        JSR WriteCurrentCharacterToCurrentXYPos
-        LDA currentExplosionCharacter
-        STA currentCharacter
-        DEC materializeShipOffset
-        LDA materializeShipOffset
-        CMP #$FF
-        BEQ b841A
-        LDA #$0F
-        CLC 
-        SBC materializeShipOffset
-;        STA $D418    ;Select Filter Mode and Volume
-        JMP MaterializeShipLoop
-
-b841A   LDA #SHIP
-        STA currentCharacter
-        LDA #LTGREEN
-        STA colorForCurrentCharacter
-        LDA #$15
-        STA currentYPosition
-        LDA #$14
-        STA currentXPosition
-        JSR WriteCurrentCharacterToCurrentXYPos
-
-;        LDA #$0F
-;        STA $D418    ;Select Filter Mode and Volume
-;        JSR PlayMaterializeShipSoundEffects
-;        LDA #$08
-;        STA $D418    ;Select Filter Mode and Volume
-;        JSR PlayMaterializeShipSoundEffects
-;        LDA #$02
-;        STA $D418    ;Select Filter Mode and Volume
-;        JSR PlayMaterializeShipSoundEffects
-;        LDA #$00
-;        STA $D40B    ;Voice 2: Control Register
-;        LDA #$0F
-;        STA $D418    ;Select Filter Mode and Volume
-        RTS 
 
 ;-------------------------------------------------------------------------
 ; PlayMaterializeShipSoundEffects
