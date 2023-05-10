@@ -474,17 +474,17 @@ IncrementSelectedLevel
         LDA #$01
         STA selectedLevel
 b80AA   LDA #$30
-        STA SCREEN_RAM + $0157
-        STA SCREEN_RAM + $0158
+        STA SCREEN_RAM + $0155
+        STA SCREEN_RAM + $0156
 
         LDX selectedLevel
-b80B4   INC SCREEN_RAM + $0158
-        LDA SCREEN_RAM + $0158
+b80B4   INC SCREEN_RAM + $0156
+        LDA SCREEN_RAM + $0156
         CMP #$3A
         BNE b80C6
         LDA #$30
-        STA SCREEN_RAM + $0158
-        INC SCREEN_RAM + $0157
+        STA SCREEN_RAM + $0156
+        INC SCREEN_RAM + $0155
 b80C6   DEX 
         BNE b80B4
 
@@ -1855,12 +1855,12 @@ DisplayBannerAndTitleScreen
         JSR DisplayGameBanner
         JMP JumpToDisplayTitleScreen
 
-screenHeaderText   .BYTE $EA
-                   .BYTE $26,$27,$22,$20,$20,$19,$1A,$20
+screenHeaderText   
+                   .BYTE $21,$21,$22,$20,$20,$19,$1A,$20
                    .BYTE $30,$30,$30,$30,$30,$30,$30,$20
                    .BYTE $20,$1D,$1E,$20,$30,$30,$30,$30
-                   .BYTE $30,$30,$30,$20,$20,$07,$20,$20
-screenHeaderColors .BYTE $34,$03,$03,$03,$03,$04,$04,$04
+                   .BYTE $30,$30,$30,$20,$20,$07,$20,$20,$34
+screenHeaderColors .BYTE $03,$03,$03,$03,$04,$04,$04
                    .BYTE $04,$04,$04,$01,$01,$07,$07,$01
                    .BYTE $03,$03,$03,$03,$03,$03,$03,$01
                    .BYTE $01,$07,$07,$01,$0E,$0E,$0E,$0E
@@ -2806,17 +2806,23 @@ DrawGridCharAtOldPosAndCheckCollisions
 DisplayTitleScreen   
         LDA #$01
         STA selectedLevel
+
         LDX #$0E
-b8D94   LDA txtByJeffMinter,X
+@TitleLoop   
+        LDA txtByJeffMinter,X
         STA SCREEN_RAM + $00E8,X
         LDA #$03
         STA COLOR_RAM + $00E8,X
+
         LDA txtEnterLevel,X
-        STA SCREEN_RAM + $014A,X
+        STA SCREEN_RAM + $0148,X
         LDA #$01
-        STA COLOR_RAM + $014A,X
+        STA COLOR_RAM + $0148,X
+
+        LDA txtGridrunner,X
+        STA SCREEN_RAM + $00AA,X
         DEX 
-        BNE b8D94
+        BNE @TitleLoop
 
         LDX #$20
 b80D4   LDA CopyrightLine,X
@@ -2859,5 +2865,8 @@ txtByJeffMinter  =*-$01
 txtEnterLevel  =*-$01 
         .BYTE $27,$26,$3A,$27,$22,$20,$3E
         .BYTE $27,$3B,$27,$3E,$20,$30,$30,$20
+txtGridrunner  =*-$01 
+        .BYTE $21,$22,$24,$25,$22,$23,$26
+        .BYTE $26,$27,$22,$20,$20,$20,$20,$20
 
 
