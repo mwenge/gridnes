@@ -123,6 +123,8 @@ COLOR_RAM          = $8000
 GRID               = $00
 LEFT_ZAPPER        = $01
 BOTTOM_ZAPPER      = $02
+VERTICAL_LASER1    = $05
+VERTICAL_LASER2    = $06
 SHIP               = $07
 BULLET_UP1         = $08
 BOMB_DOWN          = $0A
@@ -1457,17 +1459,17 @@ DrawLaser
         LDA bulletAndLaserFrameRate
         CMP #$05
         BEQ b863C
-b863B   RTS 
+ReturnFromLaser
+        RTS 
 
 b863C   LDA laserShootInterval
         CMP #$FF
-        BNE b863B
+        BNE ReturnFromLaser
         JSR UpdateLaserCharacter
-        NOP 
-        CMP #$07
+        CMP #SHIP
         BNE b864E
 
-        LDA #$05
+        LDA #VERTICAL_LASER1
         STA laserCurrentCharacter
 b864E   LDA #WHITE
         STA colorForCurrentCharacter
@@ -1476,7 +1478,9 @@ b864E   LDA #WHITE
 
         LDA #GRID_HEIGHT - 1
         STA bottomLaserYPosition
-b865A   LDA bottomLaserYPosition
+
+@DrawLaserLoop
+        LDA bottomLaserYPosition
         STA currentYPosition
         LDA bottomLaserXPosition
         STA currentXPosition
@@ -1484,28 +1488,31 @@ b865A   LDA bottomLaserYPosition
         DEC bottomLaserYPosition
         LDA bottomLaserYPosition
         CMP #$02
-        BNE b865A
+        BNE @DrawLaserLoop
         JSR PPU_Update
 
+DrawHorizontalLaser
+        ; Draw the horizontal axis laser.
         LDA leftLaserYPosition
         STA currentYPosition
         LDA leftLaserXPosition
         STA currentXPosition
         JSR GetCharacterAtCurrentXYPos
         CMP laserCurrentCharacter
-        BEQ b86A2
+        BEQ ClearLaser
 
         LDA #GRID
         STA currentCharacter
         LDA #ORANGE
         STA colorForCurrentCharacter
         JSR WriteCurrentCharacterToCurrentXYPosBatch
+
         INC leftLaserXPosition
         LDA leftLaserXPosition
         STA currentXPosition
         JSR CheckCurrentCharacterForShip
         CMP laserCurrentCharacter
-        BEQ b86A2
+        BEQ ClearLaser
 
         LDA #WHITE
         STA colorForCurrentCharacter
@@ -1516,19 +1523,24 @@ b865A   LDA bottomLaserYPosition
         JMP WriteCurrentCharacterToCurrentXYPosBatch
         ;Returns
 
-b86A2   LDA #GRID_HEIGHT - 1
+ClearLaser   
+        LDA #GRID_HEIGHT - 1
         STA currentYPosition
+
         LDA bottomLaserXPosition
         STA currentXPosition
+
         LDA #ORANGE
         STA colorForCurrentCharacter
+
         LDA #GRID
         STA currentCharacter
-b86B2   JSR WriteCurrentCharacterToCurrentXYPosToNMTOnly
+@ClearLaserLoop
+        JSR WriteCurrentCharacterToCurrentXYPosToNMTOnly
         DEC currentYPosition
         LDA currentYPosition
         CMP #$02
-        BNE b86B2
+        BNE @ClearLaserLoop
         JSR PPU_Update
 
         LDA leftLaserYPosition
@@ -1581,8 +1593,8 @@ WriteBombUpdateToNMT
         STX NMT_UPDATE_LEN
 
         ; If we've got a few to write, let them do that now.
-        ;CPX #$10
-        ;BMI @UpdateComplete
+        CPX #$10
+        BMI @UpdateComplete
         JSR PPU_Update
 
 @UpdateComplete
