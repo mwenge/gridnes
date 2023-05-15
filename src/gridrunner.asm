@@ -508,7 +508,7 @@ StartLevel
         STA SCREEN_RAM + 31
         LDX #$07
         LDA #$30
-b80EE   STA SCREEN_RAM + $0007,X
+b80EE   STA SCREEN_RAM + $0006,X
         DEX 
         BNE b80EE
         JMP DisplayNewLevelInterstitial
@@ -1883,19 +1883,20 @@ screenHeaderColors .BYTE $03,$03,$03,$03,$04,$04,$04
 IncrementPlayerScore   
         TXA 
         PHA 
-b8872   INC SCREEN_RAM + $0008,X
-        LDA SCREEN_RAM + $0008,X
+b8872   INC SCREEN_RAM + $0007,X
+        LDA SCREEN_RAM + $0007,X
         CMP #$3A
         BNE b8884
         LDA #$30
-        STA SCREEN_RAM + $0008,X
+        STA SCREEN_RAM + $0007,X
         DEX 
         BNE b8872
 b8884   PLA 
         TAX 
         DEY 
         BNE IncrementPlayerScore
-        JSR WriteHeaderToNMT
+
+        JSR WriteScoreToNMT
         RTS 
 
 ;-------------------------------------------------------------------------
@@ -2473,33 +2474,40 @@ CheckOverlapWithBulletOrGrid
 b8BFB   RTS 
 
 ;-------------------------------------------------------------------------
-; WriteHeaderToNMT
+; WriteScoreToNMT
 ;-------------------------------------------------------------------------
-WriteHeaderToNMT
-
-        JSR PPU_Off
-
-        ; first nametable, start by clearing to empty
-        LDA $2002 ; reset latch
-        LDA #$20
-        STA $2006
-        LDA #$00
-        STA $2006
+WriteScoreToNMT
 
         ; empty nametable
-        LDX #0 ; 30 rows
-        LDA screenBufferLoPtrArray,X
-        STA screenBufferLoPtr
-        LDA screenBufferHiPtrArray,X
+        LDA #>PPU_SCREEN_RAM
+        STA screenLineHiPtr
+        LDA #>SCREEN_RAM
         STA screenBufferHiPtr
-        LDY #0 ; 32 columns
+
+        LDX NMT_UPDATE_LEN
+        LDA #0
+        STA screenBufferLoPtr
+        LDY #7
+        STY screenLineLoPtr
         :
+          LDA screenLineHiPtr
+          STA NMT_UPDATE, X
+          INX
+
+          LDA screenLineLoPtr
+          STA NMT_UPDATE, X
+          INC screenLineLoPtr
+          INX
+
           LDA (screenBufferLoPtr),Y
-          STA $2007
+          STA NMT_UPDATE, X
+          INX
+
           INY
-          CPY #32
+          CPY #15
           BNE :-
 
+        STX NMT_UPDATE_LEN
         JSR PPU_Update
         RTS 
 
