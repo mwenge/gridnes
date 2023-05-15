@@ -609,6 +609,9 @@ InitializeGame
 ; AddPixelToNMTUpdate
 ;-------------------------------------------------------
 AddPixelToNMTUpdate
+        JSR GetCharacterAtCurrentXYPos
+        CMP currentCharacter
+        BEQ @Return
 
         LDA currentCharacter
         STA (screenBufferLoPtr),Y
@@ -632,7 +635,7 @@ AddPixelToNMTUpdate
 
         STX NMT_UPDATE_LEN
 
-
+@Return
         RTS
 
 ;-------------------------------------------------------------------------
