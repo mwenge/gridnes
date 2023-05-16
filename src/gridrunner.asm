@@ -682,7 +682,7 @@ WriteCurrentCharacterToCurrentXYPosToNMTOnly
 ;-------------------------------------------------------------------------
 WriteCurrentCharacterToCurrentXYPosBatch
         JSR GetLinePtrForCurrentYPosition
-        LDA #37
+        LDA #47
         STA BATCH_SIZE
         JSR AddPixelToNMTUpdate
 
@@ -1476,7 +1476,7 @@ b863C   LDA laserShootInterval
         STA laserCurrentCharacter
 b864E   LDA #WHITE
         STA colorForCurrentCharacter
-        LDA laserCurrentCharacter
+        LDA #VERTICAL_LASER1
         STA currentCharacter
 
         LDA #GRID_HEIGHT - 1
@@ -1487,12 +1487,11 @@ b864E   LDA #WHITE
         STA currentYPosition
         LDA bottomLaserXPosition
         STA currentXPosition
-        JSR WriteCurrentCharacterToCurrentXYPosToNMTOnly
+        JSR WriteCurrentCharacterToCurrentXYPosBatch
         DEC bottomLaserYPosition
         LDA bottomLaserYPosition
         CMP #$02
         BNE @DrawLaserLoop
-        JSR PPU_Update
 
 DrawHorizontalLaser
         ; Draw the horizontal axis laser.
@@ -1501,7 +1500,7 @@ DrawHorizontalLaser
         LDA leftLaserXPosition
         STA currentXPosition
         JSR GetCharacterAtCurrentXYPos
-        CMP laserCurrentCharacter
+        CMP #VERTICAL_LASER1
         BEQ ClearLaser
 
         LDA #GRID
@@ -1514,7 +1513,7 @@ DrawHorizontalLaser
         LDA leftLaserXPosition
         STA currentXPosition
         JSR CheckCurrentCharacterForShip
-        CMP laserCurrentCharacter
+        CMP #VERTICAL_LASER1
         BEQ ClearLaser
 
         LDA #WHITE
@@ -1544,7 +1543,6 @@ ClearLaser
         LDA currentYPosition
         CMP #$02
         BNE @ClearLaserLoop
-        JSR PPU_Update
 
         LDA leftLaserYPosition
         STA currentYPosition
@@ -1632,8 +1630,8 @@ WritePodUpdateToNMT
         STX NMT_UPDATE_LEN
 
         ; If we've got a few to write, let them do that now.
-        ;CPX #$10
-        ;BMI @UpdateComplete
+        CPX #$10
+        BMI @UpdateComplete
         JSR PPU_Update
 
 @UpdateComplete
