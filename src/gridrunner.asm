@@ -721,9 +721,9 @@ GetCharacterAtCurrentXYPos
         RTS 
 
 ;-------------------------------------------------------------------------
-; PlaySomeSound
+; PlayGridDrawingSound
 ;-------------------------------------------------------------------------
-PlaySomeSound
+PlayGridDrawingSound
 ;        LDA #$00
 ;        STA $D404    ;Voice 1: Control Register
 ;        STA $D40B    ;Voice 2: Control Register
@@ -759,14 +759,14 @@ b81BC   LDA gridYPos
         LDA gridXPos
         STA currentXPosition
         JSR WriteCurrentCharacterToCurrentXYPos
-        JSR PlaySomeSound
+        JSR PlayGridDrawingSound
         INC gridYPos
         LDA gridYPos
         CMP #GRID_HEIGHT
         BNE b81BC
 
         LDX #$01
-b81D4   JSR JumpToPlayAnotherSound
+b81D4   JSR JumpToPlayRandomSoundForGrid
         DEY 
         BNE b81DA
 b81DA   DEX 
@@ -790,14 +790,14 @@ b81F1   LDA gridYPos
         LDA gridXPos
         STA currentYPosition
         JSR WriteCurrentCharacterToCurrentXYPos
-        JSR PlaySomeSound
+        JSR PlayGridDrawingSound
         INC gridYPos
         LDA gridYPos
         CMP #GRID_WIDTH
         BNE b81F1
 
         LDX #$01
-b8209   JSR JumpToPlayAnotherSound
+b8209   JSR JumpToPlayRandomSoundForGrid
         DEY 
         BNE b820F
 b820F   DEX 
@@ -827,15 +827,15 @@ b8227   LDA lastKeyPressed
         ;Returns
 
 ;-------------------------------------------------------------------------
-; JumpToPlayAnotherSound
+; JumpToPlayRandomSoundForGrid
 ;-------------------------------------------------------------------------
-JumpToPlayAnotherSound
-        JMP PlayAnotherSound
+JumpToPlayRandomSoundForGrid
+        JMP PlayRandomSoundForGrid
 
 ;---------------------------------------------------------------------------------
-; PlayAnotherSound   
+; PlayRandomSoundForGrid   
 ;---------------------------------------------------------------------------------
-PlayAnotherSound   
+PlayRandomSoundForGrid   
         LDA #$04
         STA materializeShipOffset
 j8237   INC materializeShipOffset
