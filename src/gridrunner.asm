@@ -234,6 +234,7 @@ InitializeNES
         LDA #0
         STA $2000 ; DISABLE NMI
         STA $2001 ; DISABLE RENDERING
+        LDA #$0F
         STA $4015 ; DISABLE APU SOUND
         ;STA $4010 ; DISABLE DMC IRQ
         LDA #$00
@@ -274,6 +275,7 @@ InitializeNES
 ;        STA paletteLoPtr
 ;        LDA paletteArrayHiPtr
 ;        STA paletteHiPtr
+
 
         JMP InitializeGame
 
@@ -724,12 +726,9 @@ GetCharacterAtCurrentXYPos
 ; PlayGridDrawingSound
 ;-------------------------------------------------------------------------
 PlayGridDrawingSound
-;        LDA #$00
-;        STA $D404    ;Voice 1: Control Register
-;        STA $D40B    ;Voice 2: Control Register
-;        LDA #$81
-;        STA $D404    ;Voice 1: Control Register
-;        STA $D40B    ;Voice 2: Control Register
+        LDA #$87
+        STA $4000    ;Voice 1: Control Register
+        STA $4004    ;Voice 2: Control Register
         RTS 
 
 GRID_HEIGHT = 28 
@@ -747,10 +746,6 @@ DrawGrid
 
         ; Draw the horizontal lines of the grid
 DrawHorizontalLineLoop   
-;        LDA #$00
-;        STA $D412    ;Voice 3: Control Register
-;        LDA #$00
-;        STA $D412    ;Voice 3: Control Register
 
         LDA #$02
         STA gridYPos
@@ -845,10 +840,12 @@ j8237   INC materializeShipOffset
         RTS 
 
 b8240   LDA randomValue
-        ;STA $D401    ;Voice 1: Frequency Control - High-Byte
-        ;LDA randomValue
-        ;ADC #$01
-        ;STA $D408    ;Voice 2: Frequency Control - High-Byte
+        STA $4003    ;Voice 1: Frequency Control - High-Byte
+        STA $4004    ;Voice 1: Frequency Control - High-Byte
+        LDA randomValue
+        ADC #$01
+        STA $4006    ;Voice 2: Frequency Control - High-Byte
+        STA $4007    ;Voice 2: Frequency Control - High-Byte
         JMP j8237
 
 ;-------------------------------------------------------------------------
@@ -857,20 +854,15 @@ b8240   LDA randomValue
 MaterializeShip
         LDA #MATERIALIZE_OFFSET
         STA materializeShipOffset
-;        LDA #$02
-;        STA $D408    ;Voice 2: Frequency Control - High-Byte
-;        LDA #$00
-;        STA $D404    ;Voice 1: Control Register
-;        STA $D40B    ;Voice 2: Control Register
+        LDA #$42
+        STA $4007    ;Voice 2: Frequency Control - High-Byte
         LDA #EXPLOSION1
         STA currentCharacter
 MaterializeShipLoop
         LDA #WHITE
         STA colorForCurrentCharacter
-;        LDA #$00
-;        STA $D40B    ;Voice 2: Control Register
-;        LDA #$81
-;        STA $D40B    ;Voice 2: Control Register
+        LDA #$47
+        STA $4004    ;Voice 2: Control Register
 
         LDA #START_Y_POS
         STA currentYPosition
@@ -1266,7 +1258,8 @@ b84E5   LDA currentXPosition
 DrawBullet
         DEC bulletAndLaserFrameRate
         BEQ b84FD
-b84FC   RTS 
+ReturnFromBullet
+        RTS 
 
 b84FD   LDA #$10
         STA bulletAndLaserFrameRate
@@ -1277,7 +1270,7 @@ b84FD   LDA #$10
 
         LDA joystickInput
         AND #PAD_A
-        BEQ b84FC
+        BEQ ReturnFromBullet
 
         LDA previousXPosition
         STA currentBulletXPosition
@@ -1337,20 +1330,24 @@ MaybePlayBulletSound
         RTS 
 
 b8578   
-;        DEC bulletSoundControl
-;        LDA bulletSoundControl
-;        ADC #$00
-;        STA $D401    ;Voice 1: Frequency Control - High-Byte
-;        LDA #$00
-;        STA $D404    ;Voice 1: Control Register
-;        LDA #$81
-;        STA $D404    ;Voice 1: Control Register
-;        LDA bulletSoundControl
-;        STA $D408    ;Voice 2: Frequency Control - High-Byte
-;        LDA #$00
-;        STA $D40B    ;Voice 2: Control Register
-;        LDA #$81
-;        STA $D40B    ;Voice 2: Control Register
+        DEC bulletSoundControl
+
+        LDA bulletSoundControl
+        ADC #$00
+        STA $4006
+        LDA #$10
+        STA $4007
+        LDA #$84
+        STA $4004 
+
+        LDA bulletSoundControl
+        ADC #$00
+        STA $400E    
+        LDA #$08
+        STA $400F   
+        LDA #$82
+        STA $400C  
+
         RTS 
 
 ;-------------------------------------------------------------------------
@@ -1427,11 +1424,9 @@ DrawBottomZapperAndMaybeFireLaser
 b8605   LDA laserFrameRate
         STA laserAndPodInterval
 
+        LDA #$07
+        STA $4008    ;Voice 3: Control Register
         JSR PlayZapperSound
-;        LDA #$00
-;        STA $D412    ;Voice 3: Control Register
-;        LDA #$21
-;        STA $D412    ;Voice 3: Control Register
 
         LDA #$FF
         STA laserShootInterval
@@ -1451,8 +1446,10 @@ b8605   LDA laserFrameRate
 ; PlayZapperSound
 ;-------------------------------------------------------------------------
 PlayZapperSound
-;        LDA #$03
-;        STA $D40F    ;Voice 3: Frequency Control - High-Byte
+        LDA #$13
+        STA $400A    ;Voice 3: Frequency Control - High-Byte
+        LDA #$23
+        STA $400B    ;Voice 3: Frequency Control - High-Byte
         RTS 
 
 ;-------------------------------------------------------------------------
@@ -2328,12 +2325,10 @@ b8B00   STA explosionXPosArray,X
 b8B0A   STA explosionYPosArray,X
         DEX 
         BNE b8B0A
-;        LDA #$00
-;        STA $D404    ;Voice 1: Control Register
-;        STA $D40B    ;Voice 2: Control Register
-;        STA $D412    ;Voice 3: Control Register
-;        LDA #$03
-;        STA $D401    ;Voice 1: Frequency Control - High-Byte
+
+        LDA #$0B
+        STA $400E    ;Voice 1: Frequency Control - High-Byte
+        STA $400F    ;Voice 1: Frequency Control - High-Byte
         LDA #EXPLOSION1
         STA currentShipExplosionCharacter
         ; Falls through
@@ -2342,12 +2337,10 @@ b8B0A   STA explosionYPosArray,X
 ; PlayExplosion   
 ;---------------------------------------------------------------------------------
 PlayExplosion   
-;        LDA #$00
-;        STA $D404    ;Voice 1: Control Register
-;        LDA #$81
-;        STA $D404    ;Voice 1: Control Register
-;        LDA collisionSoundControl
-;        STA $D418    ;Select Filter Mode and Volume
+        LDA collisionSoundControl
+        AND $0F
+        STA $400C    ;Select Filter Mode and Volume
+
         LDX #$08
         LDA #ORANGE
         STA colorForCurrentCharacter
@@ -2791,7 +2784,7 @@ SoundEffect
         STX currentDroidIndex
         LDA #$40
         SBC currentDroidIndex
-;        STA $D401    ;Voice 1: Frequency Control - High-Byte
+        STA $4003    ;Voice 1: Frequency Control - High-Byte
         RTS 
 
 ;---------------------------------------------------------------------------------
