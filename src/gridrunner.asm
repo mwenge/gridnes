@@ -2405,7 +2405,8 @@ b8B91   JSR UpdateExplosionYPosArray
         STA currentCharacter
         JSR GetCharAtCurrentPosition
         BNE b8BAE
-        JSR WriteCurrentCharacterToCurrentXYPos
+        JSR WriteCurrentCharacterToCurrentXYPosToNMTOnly
+        JSR PPU_Update
 b8BAE   JMP MaybeRestartLevel
 
 ;---------------------------------------------------------------------------------
