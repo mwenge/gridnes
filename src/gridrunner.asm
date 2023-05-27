@@ -117,8 +117,13 @@ explosionYPosArray            .res  $100
 ; The raw address for PPU's screen ram.
 PPU_SCREEN_RAM     = $2000
 ; SCREEN_RAM is our address to screenBuffer
-SCREEN_RAM         = $6000
-COLOR_RAM          = $8000
+SCREEN_RAM         = $6020
+COLOR_RAM          = $8020
+GRID_HEIGHT        = 28 
+GRID_WIDTH         = 31 
+GRID_TOP           = 2
+GRID_LEFT          = 2
+
 
 GRID               = $00
 LEFT_ZAPPER        = $01
@@ -411,6 +416,16 @@ PPU_Off
           BNE :-
         RTS
 
+;---------------------------------------------------------------------------------
+; MaybeContinueCheckingHighScore   
+;---------------------------------------------------------------------------------
+MaybeContinueCheckingHighScore   
+        INX 
+        CPX #$07
+        BNE CheckHighScore
+        JMP DisplayTitleScreen
+
+        .BYTE $EA,$EA,$EA
 ;-------------------------------------------------------------------------
 ; CheckCurrentCharacterForShip
 ;-------------------------------------------------------------------------
@@ -463,6 +478,24 @@ UpdateExplosionYPosArray
 ; WaitForScreen   
 ;---------------------------------------------------------------------------------
 WaitForScreen   
+        LDX #$00
+
+CheckHighScore
+        LDA SCREEN_RAM + $0007,X
+        CMP SCREEN_RAM + $0013,X
+        BNE MaybeUpdateHighScore
+        JMP MaybeContinueCheckingHighScore
+
+SkipUpdatingHighScore   
+        JMP DisplayTitleScreen
+
+MaybeUpdateHighScore   
+        BMI SkipUpdatingHighScore
+@Loop   LDA SCREEN_RAM + $0007,X
+        STA SCREEN_RAM + $0013,X
+        INX 
+        CPX #$07
+        BNE @Loop
         JMP DisplayTitleScreen
 
 CopyrightLine   =*-$01
@@ -731,13 +764,11 @@ PlayGridDrawingSound
         STA $4004    ;Voice 2: Control Register
         RTS 
 
-GRID_HEIGHT = 28 
-GRID_WIDTH = 31 
 ;-------------------------------------------------------------------------
 ; DrawGrid
 ;-------------------------------------------------------------------------
 DrawGrid
-        LDA #$02
+        LDA #GRID_LEFT
         STA gridXPos
         LDA #ORANGE
         STA colorForCurrentCharacter
@@ -747,7 +778,7 @@ DrawGrid
         ; Draw the horizontal lines of the grid
 DrawHorizontalLineLoop   
 
-        LDA #$02
+        LDA #GRID_TOP
         STA gridYPos
 b81BC   LDA gridYPos
         STA currentYPosition
@@ -772,13 +803,13 @@ b81DA   DEX
         BNE DrawHorizontalLineLoop
 
         ; Draw the full grid
-        LDA #$02
+        LDA #GRID_LEFT
         STA gridXPos
         LDA #GRID
         STA currentCharacter
 
 DrawGridLoop
-        LDA #$01
+        LDA #GRID_TOP - 1
         STA gridYPos
 b81F1   LDA gridYPos
         STA currentXPosition
@@ -1862,7 +1893,7 @@ DisplayBannerAndTitleScreen
         JMP JumpToDisplayTitleScreen
 
 screenHeaderText   
-                   .BYTE $21,$21,$22,$20,$20,$19,$1A,$20
+                   .BYTE $21,$20,$20,$20,$20,$19,$1A,$20
                    .BYTE $30,$30,$30,$30,$30,$30,$30,$20
                    .BYTE $20,$1D,$1E,$20,$30,$30,$30,$30
                    .BYTE $30,$30,$30,$20,$20,$07,$20,$20,$34
@@ -2477,9 +2508,9 @@ WriteScoreToNMT
         STA screenBufferHiPtr
 
         LDX NMT_UPDATE_LEN
-        LDA #0
+        LDA #GRID_TOP - 1
         STA screenBufferLoPtr
-        LDY #7
+        LDY #39
         STY screenLineLoPtr
         :
           LDA screenLineHiPtr
@@ -2496,7 +2527,7 @@ WriteScoreToNMT
           INX
 
           INY
-          CPY #15
+          CPY #47
           BNE :-
 
         STX NMT_UPDATE_LEN
@@ -2551,7 +2582,7 @@ ClearScreen
 ;-------------------------------------------------------------------------
 ClearScreenBuffer
         ; empty nametable
-        LDX #1 ; 30 rows
+        LDX #GRID_TOP ; 30 rows
         :
           LDA screenBufferLoPtrArray,X
           STA screenBufferLoPtr
@@ -2565,7 +2596,7 @@ ClearScreenBuffer
             CPY #32
             BNE :-
           INX
-          CPX #30
+          CPX #GRID_HEIGHT + 2
           BNE :--
 
         RTS 
@@ -2621,10 +2652,11 @@ ClearScreenAndRestartLevel
 
         LDA displayedLives
         CMP #$30
-        BEQ b8C2A
+        BEQ GameOver
         JMP UpdateLivesAndRestartLevel
 
-b8C2A   JMP WaitForScreen
+GameOver   
+        JMP WaitForScreen
 
 ;---------------------------------------------------------------------------------
 ; DisplayNewLevelInterstitial   
