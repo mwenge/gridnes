@@ -57,8 +57,8 @@ noOfDroidSquadsCurrentLevel   .res 1
 droidFrameRate                .res 1
 currentDroidCharacter         .res 1
 currentDroidIndex             .res 1
-a28                           .res 1
-a29                           .res 1
+droidUpdateInterval2                           .res 1
+droidUpdateInterval1                           .res 1
 droidsLeftToKill              .res 1
 sizeOfDroidSquadForLevel      .res 1
 currentShipExplosionCharacter .res 1
@@ -1021,7 +1021,7 @@ DrawNewLevelScreen
         STA currentDroidCharacter
 
         LDA #$20
-        STA a28
+        STA droidUpdateInterval2
         LDA sizeOfDroidSquadForLevel
         STA sizeOfDroidSquadForLevel
         STA sizeOfDroidSquadForLevel
@@ -1029,7 +1029,7 @@ DrawNewLevelScreen
         STA droidsLeftToKill
 
         LDA #$00
-        STA a29
+        STA droidUpdateInterval1
 ;        LDA #$0F
 ;        STA $D418    ;Select Filter Mode and Volume
         JMP EnterMainGameLoop
@@ -2097,16 +2097,16 @@ b89B8   LDA previousXPosition
 ; UpdateDroidsRemaining
 ;-------------------------------------------------------------------------
 UpdateDroidsRemaining
-        LDA a29
+        LDA droidUpdateInterval1
         BNE b89E6
-        DEC a28
+        DEC droidUpdateInterval2
         BEQ b8A0C
         RTS 
 
 b89CA   LDA #$20
-        STA a28
+        STA droidUpdateInterval2
         LDA sizeOfDroidSquadForLevel
-        STA a29
+        STA droidUpdateInterval1
         INC noOfDroidSquadsCurrentLevel
         LDX noOfDroidSquadsCurrentLevel
         LDA #$0A
@@ -2125,13 +2125,13 @@ b89E6   INC noOfDroidSquadsCurrentLevel
         STA droidYPositionArray,X
         LDA #$0A
         STA droidXPositionArray,X
-        DEC a29
-        LDA a29
+        DEC droidUpdateInterval1
+        LDA droidUpdateInterval1
         CMP #$01
         BEQ b8A02
         RTS 
 
-b8A02   DEC a29
+b8A02   DEC droidUpdateInterval1
         DEC droidsLeftToKill
         LDA #$80
         STA droidStatusArray,X
