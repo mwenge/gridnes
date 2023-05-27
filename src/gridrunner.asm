@@ -57,8 +57,8 @@ noOfDroidSquadsCurrentLevel   .res 1
 droidFrameRate                .res 1
 currentDroidCharacter         .res 1
 currentDroidIndex             .res 1
-droidUpdateInterval2                           .res 1
-droidUpdateInterval1                           .res 1
+droidUpdateInterval2          .res 1
+droidUpdateInterval1          .res 1
 droidsLeftToKill              .res 1
 sizeOfDroidSquadForLevel      .res 1
 currentShipExplosionCharacter .res 1
@@ -215,10 +215,11 @@ example_palette
 .byte $0F,$09,$19,$29 ; bg1 green
 .byte $0F,$01,$11,$21 ; bg2 blue
 .byte $0F,$00,$10,$30 ; bg3 greyscale
-.byte $0F,$18,$28,$38 ; sp0 yellow
-.byte $0F,$14,$24,$34 ; sp1 purple
-.byte $0F,$1B,$2B,$3B ; sp2 teal
-.byte $0F,$12,$22,$32 ; sp3 marine
+
+; See https://taywee.github.io/NerdyNights/nerdynights/backgrounds.html
+; for this insanely complicated system.
+bannerAttribute
+  .BYTE %00001010, %00001010, %0001010, %00001010, %00001010, %00001010, %00001010, %00001010
 
 .segment "CODE"
 ;-------------------------------------------------------
@@ -2567,6 +2568,20 @@ WriteScreenBufferToNMT
           INX
           CPX #30
           BNE :--
+
+; Write the color attribute table.
+        LDA $2002             ; read PPU status to reset the high/low latch
+        LDA #$23
+        STA $2006             ; write the high byte of $23C0 address
+        LDA #$C0
+        STA $2006             ; write the low byte of $23C0 address
+        LDX #$00              ; start out at 0
+LoadAttributeLoop
+        LDA bannerAttribute, x      ; load data from address (bannerAttribute + the value in x)
+        STA $2007             ; write to PPU
+        INX                   ; X = X + 1
+        CPX #$08              ; Compare X to hex $08, decimal 8 - copying 8 bytes
+        BNE LoadAttributeLoop
 
         JSR PPU_Update
         RTS 
