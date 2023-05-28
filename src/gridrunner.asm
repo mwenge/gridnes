@@ -212,14 +212,14 @@ PALETTE        .res 32  ; PALETTE BUFFER FOR PPU UPDATE
 .segment "RODATA"
 example_palette
 .byte $0F,$15,$38,$30 ; bg0 purple/pink
-.byte $0F,$09,$19,$29 ; bg1 green
-.byte $0F,$01,$11,$21 ; bg2 blue
-.byte $0F,$00,$10,$30 ; bg3 greyscale
+.byte $0F,$09,$23,$38 ; bg1 green
+.byte $0F,$2A,$31,$38 ; bg2 blue
+.byte $0F,$00,$35,$3A ; bg3 greyscale
 
 ; See https://taywee.github.io/NerdyNights/nerdynights/backgrounds.html
 ; for this insanely complicated system.
 bannerAttribute
-  .BYTE %00001010, %00001010, %0001010, %00001010, %00001010, %00001010, %00001010, %00001010
+  .BYTE %00001010, %00001010, %0001010, %00001010, %00000101, %00000101, %00000101, %00001111
 
 .segment "CODE"
 ;-------------------------------------------------------
