@@ -22,7 +22,7 @@ On Ubuntu you can install [FCEUX], the NES emulator, as follows:
 sudo apt install fceux
 ```
 
-Once you have that installed, you can [download the game](https://github.com/mwenge/psynes/raw/master/bin/gridrunner.nes) and play it:
+Once you have that installed, you can [download the game](https://github.com/mwenge/gridnes/raw/master/bin/gridrunner.nes) and play it:
 
 ```
 fceux gridrunner.nes
