@@ -77,7 +77,7 @@ Crappy, almost non-existent. I stopped short of figuring out how to make sound w
 The NES version seems faster than the original Gridrunner. This is not because I'm a coding genius, it's because it's
 the way it worked when I got the thing working. 
 
-<img width="400" src="https://github.com/mwenge/gridnes/assets/58846/26e05987-7d5c-476b-9375-a9b0b69ba2d6"> <img src="https://user-images.githubusercontent.com/58846/103443482-9fb16180-4c57-11eb-9403-4968bd16287f.gif" width=480>
+<img width="350" src="https://github.com/mwenge/gridnes/assets/58846/26e05987-7d5c-476b-9375-a9b0b69ba2d6"> <img src="https://user-images.githubusercontent.com/58846/103443482-9fb16180-4c57-11eb-9403-4968bd16287f.gif" width=400>
 
 ### So how does Gridrunner work?
 I wrote up the basic workings of C64 gridrunner in this [Little Black Book](https://github.com/mwenge/llamaSource/blob/main/GridrunnerTheLittleBlackBook.md). Everything there applies to the NES version.
