@@ -52,11 +52,11 @@ $ make
 Made out of curiosity as part of the [Gridrunner](https://github.com/mwenge/gridrunner) project.
 This [example project](https://github.com/bbbradsmith/NES-ca65-example/) was a big help in getting started.
 
-## NES-Specific Code
+### NES-Specific Code
 This is mostly confined to [nes.asm](src/nes.asm). It's where I've put all the helper functions as well the boiler
 plate robbed from [Brad Smith's example project](https://github.com/bbbradsmith/NES-ca65-example/).
 
-## Graphics
+### Graphics
 The C64 is a very friendly system to develop on - you write a value to a location in memory and it magically
 appears on screen. You write a value to a different location, it changes color. The NES on the other hand requires
 a lot more convolutions from you. While it allows up to 64 8x8 sprites, it does not really envisage you writing
@@ -70,16 +70,16 @@ position, I instead write it to a buffer array called `NMT_UPDATE`. This is done
 functions, depending on the use case, but mainly `WriteCurrentCharacterToCurrentXYPosBatch` which will append updates
 to the list in `NMT_UPDATE` until there are enough of them to warrant writing to the screen itself in `MainNMIInterruptHandler`.
 
-## Sound
+### Sound
 Crappy, almost non-existent. I stopped short of figuring out how to make sound work in NES properly.
 
-## Gameplay
+### Gameplay
 The NES version seems faster than the original Gridrunner. This is not because I'm a coding genius, it's because it's
 the way it worked when I got the thing working. 
 
-<img width="200" src="https://github.com/mwenge/gridnes/assets/58846/26e05987-7d5c-476b-9375-a9b0b69ba2d6"> <img src="https://user-images.githubusercontent.com/58846/103443482-9fb16180-4c57-11eb-9403-4968bd16287f.gif" width=200>
+<img width="400" src="https://github.com/mwenge/gridnes/assets/58846/26e05987-7d5c-476b-9375-a9b0b69ba2d6"> <img src="https://user-images.githubusercontent.com/58846/103443482-9fb16180-4c57-11eb-9403-4968bd16287f.gif" width=480>
 
-## So how does Gridrunner work?
+### So how does Gridrunner work?
 I wrote up the basic workings of C64 gridrunner in this [Little Black Book](https://github.com/mwenge/llamaSource/blob/main/GridrunnerTheLittleBlackBook.md). Everything there applies to the NES version.
 
 [cc65]: https://cc65.github.io/
