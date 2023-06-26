@@ -9,6 +9,8 @@ all: clean run
 gridrunner.nes:
 	ca65 -g src/gridrunner.asm -l bin/gridrunner.lst -o bin/gridrunner.o
 	ld65 -o $(NES_IMAGE) -C gridrunner.cfg -m bin/gridrunner.map.txt bin/gridrunner.o -Ln bin/gridrunner.labels.txt --dbgfile bin/gridrunner.nes.test.dbg
+	echo "fab5ed47d3ee1e3588712e3230981fd7  bin/gridrunner.nes" | md5sum -c
+
 	cp ${NES_IMAGE} ${ONLINE_NES_IMAGE}
 	#python3 fceux_symbols.py
 
